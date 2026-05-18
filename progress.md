@@ -43,3 +43,36 @@
 - Implement `tfidf_discovery.py` for emerging term detection
 - Write `test_detector.py` with explicit false-positive cases for "Go"/"Rust"
 
+## cd40436 — 2026-05-18
+**Done:** Added `taxonomy.py` — 150+ terms across 6 categories, `AMBIGUOUS` patterns with `re.IGNORECASE`, precompiled `_SIMPLE_PATTERNS` and `_AMBIGUOUS_PATTERNS`.
+**Next:** Implement `detect_keywords` function.
+
+## 66273c2 — 2026-05-18
+**Done:** Added `detector.py` — `detect_keywords(title, url)` with word-boundary regex, URL path extraction converting hyphens/slashes to spaces for matching.
+**Next:** Tests for detector.
+
+## a4cd647 — 2026-05-18
+**Done:** 22 detector tests covering Rust false positives ("rusty"), Go false positives ("going", "go to", "go ahead", "go back"), URL path matching, multi-keyword, dedup, edge cases.
+**Next:** Batch keyword pipeline and TF-IDF discovery.
+
+## 9f7d2bc — 2026-05-18
+**Done:** Added `keyword_pipeline.py` (batch 10k-story processor writing to `keyword_events`) and `tfidf_discovery.py` (sklearn TF-IDF on weekly corpus, top-20 non-taxonomy terms).
+**Next:** Phase 2 complete. Phase 3 — aggregation, hype scoring, anomaly detection.
+
+---
+
+## Phase 2 complete — 2026-05-18
+**Done:**
+- `taxonomy.py`: 150+ terms, 6 categories, precompiled regex patterns with IGNORECASE; AMBIGUOUS dict for Go/Rust/R/C/RAG/MCP
+- `detector.py`: `detect_keywords(title, url)` — word-boundary regex + URL path extraction
+- `keyword_pipeline.py`: batch processor, 10k-story chunks, skips already-processed stories
+- `tfidf_discovery.py`: TF-IDF on weekly title corpus, surfaces top-20 unlisted emerging terms
+- 22 detector tests — explicit false positives for Go/Rust; all 41 suite tests pass twice
+
+**Next:**
+- Create `phase/3-scoring` branch from `stage` (after merge)
+- Implement `weekly_agg.py` — SQL rollup into `weekly_mentions`
+- Implement `hype_score.py` — 0–100 composite (0.5×mentions + 0.3×weighted_score + 0.2×avg_comments)
+- Implement `velocity.py` — z-score on 12-week rolling avg, `is_trending`/`is_crashing` flags
+- Write `test_aggregation.py` and `test_anomaly.py`
+
