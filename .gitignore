@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+.DS_Store
+*.duckdb
+*.duckdb.wal
+# hn.duckdb is tracked via Git LFS — do not ignore it
+!hn.duckdb
