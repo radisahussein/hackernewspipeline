@@ -58,16 +58,18 @@ def _parse_story(hit: dict[str, Any]) -> dict[str, Any] | None:
     }
 
 
-async def fetch_stories(
+async def fetch_stories_with_count(
     since_ts: int,
     until_ts: int | None = None,
     page_size: int = 1000,
-) -> list[dict[str, Any]]:
-    """Fetch all stories with created_at in (since_ts, until_ts].
+) -> tuple[list[dict[str, Any]], int]:
+    """Fetch stories in (since_ts, until_ts]. Returns (stories, nb_hits).
 
-    until_ts defaults to now when not provided (incremental fetch mode).
+    nb_hits is the total Algolia hit count for the window (capped at 1000 by API).
+    Caller should warn if nb_hits >= 1000 (indicates possible truncation).
     """
     stories: list[dict[str, Any]] = []
+    nb_hits = 0
 
     async with httpx.AsyncClient() as client:
         page = 0
@@ -75,6 +77,8 @@ async def fetch_stories(
             data = await _fetch_page(client, since_ts, page, page_size, until_ts)
             hits = data.get("hits", [])
             nb_pages = data.get("nbPages", 1)
+            if page == 0:
+                nb_hits = data.get("nbHits", len(hits))
 
             for hit in hits:
                 story = _parse_story(hit)
@@ -85,4 +89,14 @@ async def fetch_stories(
             if page >= nb_pages or not hits:
                 break
 
+    return stories, nb_hits
+
+
+async def fetch_stories(
+    since_ts: int,
+    until_ts: int | None = None,
+    page_size: int = 1000,
+) -> list[dict[str, Any]]:
+    """Fetch stories in (since_ts, until_ts]. Convenience wrapper."""
+    stories, _ = await fetch_stories_with_count(since_ts, until_ts, page_size)
     return stories
