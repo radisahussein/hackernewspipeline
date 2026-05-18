@@ -132,3 +132,29 @@
 - Add `@st.cache_data(ttl=3600)` on all query functions
 - Write `test_dashboard.py` (query layer only)
 
+## 7f3c622 — 2026-05-18
+**Done:** Added `dashboard/app.py` — Streamlit 3-tab app (Trending Now, Hype Cycles, Emerging Terms), sidebar with category/time filters, `@st.cache_data(ttl=3600)` on all 7 query functions.
+**Next:** Dashboard tests.
+
+## 7db505a — 2026-05-18
+**Done:** 8 dashboard query layer tests — trending list shape/ordering, hype cycle shape/null-check/limit, keyword list sorted, latest week format, story count, unknown keyword empty.
+**Next:** Phase 5 complete. Phase 6 — deploy prep.
+
+---
+
+## Phase 5 complete — 2026-05-18
+**Done:**
+- `dashboard/app.py`: full 3-tab Streamlit UI, sidebar (category filter, metadata), no in-memory state
+- 7 `@st.cache_data(ttl=3600)` query functions: trending, hype cycle, anomaly feed, emerging terms, available keywords, latest week, pipeline metadata
+- Tab 1 (Trending Now): top-5 risers/fallers metric cards + anomaly feed with HN story links
+- Tab 2 (Hype Cycles): multi-keyword line chart, compare mode diff bar chart
+- Tab 3 (Emerging Terms): TF-IDF discovery table
+- 8 query layer tests; 63 total suite tests pass twice
+
+**Next:**
+- Create `phase/6-deploy` branch from `stage` (after merge)
+- Set up `startup.sh` for Streamlit Cloud (download pre-loaded DuckDB)
+- Write `README.md` with architecture diagram, screenshots placeholder, hype score explanation
+- Add `.streamlit/config.toml`
+- Add `.gitignore` and verify Git LFS tracking for `hn.duckdb`
+
