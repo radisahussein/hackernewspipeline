@@ -2,8 +2,13 @@
 import asyncio
 import datetime
 import logging
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from prefect import flow, task, get_run_logger
+from prefect.cache_policies import NO_CACHE
 
 from ingestion.client import fetch_stories
 from storage.db import DuckDBStore
@@ -22,7 +27,7 @@ def _current_and_prev_iso_weeks() -> list[str]:
     return list(dict.fromkeys(weeks))  # deduplicate if same week
 
 
-@task(retries=3, retry_delay_seconds=60)
+@task(retries=3, retry_delay_seconds=60, cache_policy=NO_CACHE)
 async def fetch_new_stories(db: DuckDBStore) -> int:
     logger = get_run_logger()
     since_ts = db.get_last_fetched_at()
@@ -32,7 +37,7 @@ async def fetch_new_stories(db: DuckDBStore) -> int:
     return inserted
 
 
-@task(retries=3, retry_delay_seconds=60)
+@task(retries=3, retry_delay_seconds=60, cache_policy=NO_CACHE)
 def run_keyword_detection(db: DuckDBStore) -> int:
     logger = get_run_logger()
     hits = run_keyword_pipeline(db)
@@ -40,7 +45,7 @@ def run_keyword_detection(db: DuckDBStore) -> int:
     return hits
 
 
-@task(retries=2, retry_delay_seconds=30)
+@task(retries=2, retry_delay_seconds=30, cache_policy=NO_CACHE)
 def recompute_weekly_aggregates(db: DuckDBStore) -> None:
     logger = get_run_logger()
     for week in _current_and_prev_iso_weeks():
@@ -48,7 +53,7 @@ def recompute_weekly_aggregates(db: DuckDBStore) -> None:
         logger.info("Aggregated week=%s rows=%d", week, count)
 
 
-@task(retries=2, retry_delay_seconds=30)
+@task(retries=2, retry_delay_seconds=30, cache_policy=NO_CACHE)
 def update_hype_scores(db: DuckDBStore) -> None:
     logger = get_run_logger()
     for week in _current_and_prev_iso_weeks():
@@ -56,7 +61,7 @@ def update_hype_scores(db: DuckDBStore) -> None:
         logger.info("Hype scores week=%s rows=%d", week, count)
 
 
-@task(retries=2, retry_delay_seconds=30)
+@task(retries=2, retry_delay_seconds=30, cache_policy=NO_CACHE)
 def update_velocity(db: DuckDBStore) -> None:
     logger = get_run_logger()
     for week in _current_and_prev_iso_weeks():
@@ -64,7 +69,7 @@ def update_velocity(db: DuckDBStore) -> None:
         logger.info("Velocity week=%s rows=%d", week, count)
 
 
-@task
+@task(cache_policy=NO_CACHE)
 def run_quality_checks(db: DuckDBStore, new_stories_count: int) -> None:
     logger = get_run_logger()
 
