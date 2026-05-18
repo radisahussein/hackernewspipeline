@@ -108,3 +108,27 @@
 - Quality checks: assert new_stories > 0, keyword_events grew, max(created_at) < 26h ago
 - Deploy notes to README (Prefect Cloud free tier setup)
 
+## c140dbf — 2026-05-18
+**Done:** Added `pipeline/flow.py` — Prefect `@flow` + 6 `@task` (fetch, detect, aggregate, hype, velocity, quality checks). Quality checks assert: new stories >0, keyword_events not empty, max(created_at) <26h.
+**Next:** Phase 4 complete. Phase 5 — Streamlit dashboard.
+
+---
+
+## Phase 4 complete — 2026-05-18
+**Done:**
+- `pipeline/flow.py`: `daily_pipeline()` Prefect flow orchestrating full ETL + quality gates
+- 6 tasks with retries (fetch 3×, transforms 2×, quality check 1×)
+- Quality assertions: HN API liveness, detector health, data freshness (26h SLA)
+- `_current_and_prev_iso_weeks()` ensures last 2 weeks always recomputed
+- All 55 tests still pass
+
+**Next:**
+- Create `phase/5-dashboard` branch from `stage` (after merge)
+- Implement `src/dashboard/app.py` — Streamlit 3-tab layout (Trending Now, Hype Cycles, Emerging Terms)
+- Sidebar: category filter, time window, last pipeline run metadata
+- Tab 1: top 5 risers/fallers by velocity, anomaly feed with HN story links
+- Tab 2: multi-keyword hype cycle line chart, anomaly markers, compare mode
+- Tab 3: TF-IDF emerging terms table
+- Add `@st.cache_data(ttl=3600)` on all query functions
+- Write `test_dashboard.py` (query layer only)
+
