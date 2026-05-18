@@ -9,9 +9,9 @@ from storage.db import DuckDBStore
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
 log = logging.getLogger(__name__)
 
-# 1-day windows keep each query under Algolia's 1000-hit retrieval cap
-# (~300-500 HN stories/day on average)
-WINDOW_HOURS = 24
+# 12-hour windows keep each query under Algolia's 1000-hit retrieval cap
+# (~300-500 HN stories/day = ~150-250 per 12h window)
+WINDOW_HOURS = 12
 YEARS_BACK = 2
 
 
