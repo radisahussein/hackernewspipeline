@@ -13,10 +13,14 @@ async def _fetch_page(
     since_ts: int,
     page: int,
     page_size: int,
+    until_ts: int | None = None,
 ) -> dict[str, Any]:
+    numeric_filters = f"created_at_i>{since_ts}"
+    if until_ts is not None:
+        numeric_filters += f",created_at_i<{until_ts}"
     params = {
         "tags": "story",
-        "numericFilters": f"created_at_i>{since_ts}",
+        "numericFilters": numeric_filters,
         "hitsPerPage": page_size,
         "page": page,
     }
@@ -54,34 +58,28 @@ def _parse_story(hit: dict[str, Any]) -> dict[str, Any] | None:
     }
 
 
-async def fetch_stories(since_ts: int, page_size: int = 1000) -> list[dict[str, Any]]:
-    """Fetch all stories created after since_ts (Unix timestamp)."""
-    now = int(time.time())
+async def fetch_stories(
+    since_ts: int,
+    until_ts: int | None = None,
+    page_size: int = 1000,
+) -> list[dict[str, Any]]:
+    """Fetch all stories with created_at in (since_ts, until_ts].
+
+    until_ts defaults to now when not provided (incremental fetch mode).
+    """
     stories: list[dict[str, Any]] = []
 
     async with httpx.AsyncClient() as client:
         page = 0
         while True:
-            data = await _fetch_page(client, since_ts, page, page_size)
+            data = await _fetch_page(client, since_ts, page, page_size, until_ts)
             hits = data.get("hits", [])
             nb_pages = data.get("nbPages", 1)
 
             for hit in hits:
                 story = _parse_story(hit)
-                if story is None:
-                    continue
-                # stop if we've gone past "now" (shouldn't happen, but guard)
-                import datetime
-                if story["created_at"]:
-                    try:
-                        ts = int(datetime.datetime.fromisoformat(
-                            story["created_at"].replace("Z", "+00:00")
-                        ).timestamp())
-                        if ts > now:
-                            continue
-                    except (ValueError, AttributeError):
-                        pass
-                stories.append(story)
+                if story is not None:
+                    stories.append(story)
 
             page += 1
             if page >= nb_pages or not hits:

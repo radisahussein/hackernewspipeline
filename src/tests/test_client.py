@@ -164,3 +164,21 @@ async def test_fetch_stories_skips_hits_with_missing_title():
 
     assert len(result) == 1
     assert result[0]["story_id"] == 1
+
+
+@pytest.mark.asyncio
+async def test_fetch_stories_until_ts_included_in_request():
+    hits = [_make_hit()]
+    mock_resp = _make_response(hits, nb_pages=1)
+
+    with patch("httpx.AsyncClient") as mock_client_cls:
+        mock_client = AsyncMock()
+        mock_client_cls.return_value.__aenter__.return_value = mock_client
+        mock_client.get.return_value = mock_resp
+
+        await fetch_stories(since_ts=1000, until_ts=2000)
+
+    call_kwargs = mock_client.get.call_args
+    params = call_kwargs[1]["params"]
+    assert "2000" in params["numericFilters"]
+    assert "1000" in params["numericFilters"]
