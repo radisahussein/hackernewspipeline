@@ -158,3 +158,24 @@
 - Add `.streamlit/config.toml`
 - Add `.gitignore` and verify Git LFS tracking for `hn.duckdb`
 
+## 0ecaffe — 2026-05-18
+**Done:** Added `.gitignore`, `.streamlit/config.toml` (dark theme), `startup.sh` (downloads DuckDB from `$DUCKDB_DOWNLOAD_URL` on Streamlit Cloud), and `README.md` with architecture Mermaid diagram, hype score explanation, anomaly detection rationale, and deploy instructions.
+**Next:** Phase 6 complete. Project done — run backfill, deploy to Streamlit Cloud.
+
+---
+
+## Phase 6 complete — 2026-05-18
+**Done:**
+- `.gitignore`: excludes `.venv/`, `__pycache__/`, `*.duckdb` (except `hn.duckdb` via LFS)
+- `.streamlit/config.toml`: dark theme with brand colors
+- `startup.sh`: idempotent database download for Streamlit Cloud
+- `README.md`: full architecture diagram, skills table, hype score formula explanation, anomaly detection rationale, local dev instructions, DuckDB schema, deploy guide
+- 63 tests passing twice, zero flaky
+
+**Project complete.** To go live:
+1. Run `uv run python src/ingestion/backfill.py` (2-year HN backfill)
+2. Run keyword pipeline + aggregation
+3. Upload `hn.duckdb` as GitHub Release asset
+4. Set `DUCKDB_DOWNLOAD_URL` in Streamlit Cloud env
+5. Deploy from GitHub
+
