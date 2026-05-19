@@ -1,0 +1,56 @@
+name: Daily Pipeline
+
+on:
+  schedule:
+    - cron: "0 6 * * *"  # 06:00 UTC daily
+  workflow_dispatch:      # manual trigger from GitHub UI
+
+permissions:
+  contents: write  # needed to push last_pipeline_run.txt and upload release asset
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Download current DB from release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release download v1.0.0 \
+            --repo ${{ github.repository }} \
+            --pattern "hn.duckdb" \
+            --output hn.duckdb \
+            --clobber
+
+      - name: Run pipeline
+        run: uv run python src/pipeline/flow.py
+
+      - name: Upload updated DB to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload v1.0.0 hn.duckdb \
+            --repo ${{ github.repository }} \
+            --clobber
+
+      - name: Commit timestamp to trigger Streamlit reboot
+        run: |
+          echo "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > last_pipeline_run.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add last_pipeline_run.txt
+          git commit -m "chore: daily pipeline run $(date -u +%Y-%m-%d)"
+          git push
