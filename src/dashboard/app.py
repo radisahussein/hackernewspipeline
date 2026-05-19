@@ -1,5 +1,7 @@
 """TechPulse — Streamlit dashboard: 3 tabs, DuckDB-backed, cached queries."""
 import datetime
+import os
+import subprocess
 import sys
 from pathlib import Path
 
@@ -12,6 +14,10 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from storage.db import DEFAULT_DB_PATH
 
 DB_PATH = str(DEFAULT_DB_PATH)
+
+# Download pre-loaded DB on Streamlit Cloud if not present
+if not Path(DB_PATH).exists() and os.getenv("DUCKDB_DOWNLOAD_URL"):
+    subprocess.run(["bash", "startup.sh"], check=True)
 
 
 def _connect() -> duckdb.DuckDBPyConnection:
