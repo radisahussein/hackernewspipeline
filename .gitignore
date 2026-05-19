@@ -9,5 +9,4 @@ dist/
 .DS_Store
 *.duckdb
 *.duckdb.wal
-# hn.duckdb is tracked via Git LFS — do not ignore it
-!hn.duckdb
+.vscode/

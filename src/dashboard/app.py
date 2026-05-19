@@ -15,8 +15,18 @@ from storage.db import DEFAULT_DB_PATH
 
 DB_PATH = str(DEFAULT_DB_PATH)
 
-# Download pre-loaded DB on Streamlit Cloud if not present
-if not Path(DB_PATH).exists() and os.getenv("DUCKDB_DOWNLOAD_URL"):
+# Download pre-loaded DB on Streamlit Cloud if missing or corrupt
+def _needs_download() -> bool:
+    if not Path(DB_PATH).exists():
+        return True
+    try:
+        with duckdb.connect(DB_PATH, read_only=True):
+            pass
+        return False
+    except Exception:
+        return True
+
+if os.getenv("DUCKDB_DOWNLOAD_URL") and _needs_download():
     subprocess.run(["bash", "startup.sh"], check=True)
 
 
