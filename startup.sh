@@ -7,12 +7,14 @@ DB_PATH="hn.duckdb"
 RELEASE_URL="${DUCKDB_DOWNLOAD_URL:-}"
 
 is_valid_duckdb() {
-  # DuckDB files start with magic bytes: 4 bytes little-endian uint32 = file size
-  # Simpler check: first 4 bytes should be non-HTML (HTML starts with '<' = 0x3C)
-  local magic
-  magic=$(xxd -l 4 -p "$1" 2>/dev/null || true)
-  # Valid DuckDB v0.x magic prefix is not "<htm" (3c68746d)
-  [ "$magic" != "3c68746d" ] && [ -n "$magic" ]
+  python3 - "$1" <<'PYEOF'
+import sys, duckdb
+try:
+    duckdb.connect(sys.argv[1], read_only=True).close()
+    sys.exit(0)
+except Exception:
+    sys.exit(1)
+PYEOF
 }
 
 # Convert release tag page URL to direct asset download URL if needed
